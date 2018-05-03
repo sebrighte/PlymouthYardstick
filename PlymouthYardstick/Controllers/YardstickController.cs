@@ -45,9 +45,12 @@ namespace PlymouthYardstick.Controllers
         List<clsBoat> BoatList = new List<clsBoat>();
         YardstickController()
         {
+            string path = System.Web.HttpContext.Current.Request.MapPath("~\\Data\\PNLIST.xlsx");
+
             //Create COM Objects. Create a COM object for everything that is referenced
             Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\Users\Ernie\Downloads\PNLIST.xlsx");
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(path);
+            //Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\Users\Ernie\Downloads\PNLIST.xlsx");
             //Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"http://www.rya.org.uk/SiteCollectionDocuments/technical/Web%20Documents/PY%20Documentation/PN_List%20-%202018.xlsx");
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
             Excel.Range xlRange = xlWorksheet.UsedRange;
@@ -141,6 +144,29 @@ namespace PlymouthYardstick.Controllers
         public IHttpActionResult GetAllBoats()
         {
             return Ok(BoatList);
+        }
+
+        /// <summary>
+        /// Get a list of all boats and PYS details
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("Yardstick/GetAllBoatsHTML")]
+        public IHttpActionResult GetAllBoatsHTML()
+        {
+            string HTML = "<table><tr><th>Index</th><th>ClassName</th><th>No.Crew</th><th>Rig</th><th>Spinnaker</th><th>Handicap</th><th>Change in year</th></tr>";
+            foreach (clsBoat Boat in BoatList)
+            {
+                HTML += "<tr><td>" + Boat.Index + "</td>";
+                HTML += "<td>" + Boat.ClassName + "</td>";
+                HTML += "<td>" + Boat.Crew + "</td>";
+                HTML += "<td>" + Boat.Rig + "</td>";
+                HTML += "<td>" + Boat.Spinnaker + "</td>";
+                HTML += "<td>" + Boat.PYS + "</td>";
+                HTML += "<td>" + Boat.Change + "</td></tr>";
+            }
+            HTML += "</table>";
+            return Ok(HTML);
         }
 
 
