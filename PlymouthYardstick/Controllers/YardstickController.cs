@@ -19,8 +19,8 @@ namespace PlymouthYardstick.Controllers
         public string Spinnaker;
         public string PYS;
         public string Change;
-        //public string Races;
-        //public string Notes;
+        public string Races;
+        public string Notes;
 
         public bool SearchForBoat(string strSearch)
         {
@@ -92,11 +92,12 @@ namespace PlymouthYardstick.Controllers
 
             for (int i = startList; i <= endList; i++)
             {
+                clsBoat Boat = new clsBoat();
                 try
                 {
+                    
                     if (xlRange.Cells[i, 1].Value2.ToString() != "Class Name")
                     {
-                        clsBoat Boat = new clsBoat();
                         Boat.Index = boatIndex.ToString();
                         Boat.ClassName = xlRange.Cells[i, 1].Value2.ToString();
                         Boat.Crew = xlRange.Cells[i, 2].Value2.ToString();
@@ -104,13 +105,19 @@ namespace PlymouthYardstick.Controllers
                         Boat.Spinnaker = xlRange.Cells[i, 4].Value2.ToString();
                         Boat.PYS = xlRange.Cells[i, 5].Value2.ToString();
                         Boat.Change = xlRange.Cells[i, 6].Value2.ToString();
-                        //Boat.Races = xlRange.Cells[i, 7].Value2.ToString();
-                        //Boat.Notes = xlRange.Cells[i, 8].Value2.ToString();
+                        Boat.Races = xlRange.Cells[i, 7].Value2.ToString();
+                        Boat.Notes = xlRange.Cells[i, 8].Value2.ToString();
                         BoatList.Add(Boat);
                         boatIndex = boatIndex + 1;
                     }
                 }
-                catch { }
+                catch {
+                    if (Boat.PYS != null)
+                    {
+                        BoatList.Add(Boat);
+                        boatIndex = boatIndex + 1;
+                    }
+                }
             }
             //cleanup
             GC.Collect();
@@ -154,7 +161,7 @@ namespace PlymouthYardstick.Controllers
         [Route("Yardstick/GetAllBoatsHTML")]
         public IHttpActionResult GetAllBoatsHTML()
         {
-            string HTML = "<table><tr><th>Index</th><th>ClassName</th><th>No.Crew</th><th>Rig</th><th>Spinnaker</th><th>Handicap</th><th>Change in year</th></tr>";
+            string HTML = "<table><tr><th>Index</th><th>ClassName</th><th>No.Crew</th><th>Rig</th><th>Spinnaker</th><th>Handicap</th><th>Change in year</th><th>Races</th><th>Notes</th></tr>";
             foreach (clsBoat Boat in BoatList)
             {
                 HTML += "<tr><td>" + Boat.Index + "</td>";
@@ -163,7 +170,9 @@ namespace PlymouthYardstick.Controllers
                 HTML += "<td>" + Boat.Rig + "</td>";
                 HTML += "<td>" + Boat.Spinnaker + "</td>";
                 HTML += "<td>" + Boat.PYS + "</td>";
-                HTML += "<td>" + Boat.Change + "</td></tr>";
+                HTML += "<td>" + Boat.Change + "</td>";
+                HTML += "<td>" + Boat.Races  + "</td>";
+                HTML += "<td>" + Boat.Notes + "</td></tr>";
             }
             HTML += "</table>";
             return Ok(HTML);
@@ -210,13 +219,18 @@ namespace PlymouthYardstick.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("Yardstick/GetAdjustedTime")]
-        [ResponseType(typeof(int))]
+        [ResponseType(typeof(string))]
         public IHttpActionResult GetAdjustedTime(string BoatClass, double RaceTimeSeconds)
         {
-            foreach (clsBoat boat in BoatList)
+           foreach (clsBoat boat in BoatList)
             {
                 if (boat.SearchForBoat(BoatClass))
-                    return Ok(boat.GetAdjustedTime(RaceTimeSeconds));
+                {
+                    TimeSpan time = TimeSpan.FromSeconds(boat.GetAdjustedTime(RaceTimeSeconds));
+                    DateTime dateTime = DateTime.Today.Add(time);
+                    string displayTime = dateTime.ToString(" (mm:ss)");
+                    return Ok(boat.GetAdjustedTime(RaceTimeSeconds).ToString() + displayTime);
+                }                  
             }
             return NotFound();
         }
